@@ -22,6 +22,11 @@ const UI = {
         select.addEventListener('change', () => {
             this.updateVisibility();
             this.updateComputedValues();
+            // Clear simulation state so ADC/DAC don't cross-contaminate
+            App.currentData = null;
+            App.stepIndex = 0;
+            App.stopPlayback();
+            this.drawPlaceholders();
         });
     },
 
@@ -45,8 +50,14 @@ const UI = {
         // Vref input
         const vrefInput = document.getElementById('param-vref');
         if (vrefInput) {
-            vrefInput.addEventListener('change', () => this.updateComputedValues());
-            vrefInput.addEventListener('input', () => this.updateComputedValues());
+            vrefInput.addEventListener('change', () => {
+                if (!this.validateVref()) return;
+                this.updateComputedValues();
+            });
+            vrefInput.addEventListener('input', () => {
+                if (!this.validateVref()) return;
+                this.updateComputedValues();
+            });
         }
 
         // Sample rate sync
@@ -225,9 +236,17 @@ const UI = {
     },
 
     drawPlaceholders() {
-        Charts.drawPlaceholder(document.getElementById('graph-input'), 'Run simulation to see input signal');
-        Charts.drawPlaceholder(document.getElementById('graph-output'), 'Run simulation to see digital output');
-        Charts.drawPlaceholder(document.getElementById('graph-reconstructed'), 'Run simulation to see reconstruction');
+        const type = this.getConverterType();
+        const isDAC = type === 'r2r_dac' || type === 'current_dac';
+        if (isDAC) {
+            Charts.drawPlaceholder(document.getElementById('graph-input'), 'Run simulation to see input codes');
+            Charts.drawPlaceholder(document.getElementById('graph-output'), 'Run simulation to see analog output');
+            Charts.drawPlaceholder(document.getElementById('graph-reconstructed'), 'Run simulation to see transfer characteristic');
+        } else {
+            Charts.drawPlaceholder(document.getElementById('graph-input'), 'Run simulation to see input signal');
+            Charts.drawPlaceholder(document.getElementById('graph-output'), 'Run simulation to see digital output');
+            Charts.drawPlaceholder(document.getElementById('graph-reconstructed'), 'Run simulation to see reconstruction');
+        }
     },
 
     updateVisibility() {
@@ -263,6 +282,18 @@ const UI = {
 
         // Sample rate
         document.getElementById('param-sample-rate-group').style.display = isSigmaDelta || isDAC ? 'none' : '';
+
+        // Graph headers based on mode
+        const h4s = document.querySelectorAll('#graphs-container .graph-panel h4');
+        if (isDAC) {
+            if (h4s[0]) h4s[0].textContent = 'Input Codes';
+            if (h4s[1]) h4s[1].textContent = 'Analog Output';
+            if (h4s[2]) h4s[2].textContent = 'Transfer Characteristic';
+        } else {
+            if (h4s[0]) h4s[0].textContent = 'Input Signal';
+            if (h4s[1]) h4s[1].textContent = 'Digital Codeword Output';
+            if (h4s[2]) h4s[2].textContent = 'Reconstructed Output';
+        }
 
         // Analogy panel title
         const analogyTitle = document.getElementById('analogy-title');
@@ -334,6 +365,19 @@ const UI = {
     getVref() {
         const v = parseFloat(document.getElementById('param-vref').value);
         return (v && v > 0) ? v : 1.0;
+    },
+
+    validateVref() {
+        const el = document.getElementById('param-vref');
+        const v = parseFloat(el.value);
+        const banner = document.getElementById('error-banner');
+        if (!v || v <= 0) {
+            banner.textContent = '⚠️ Vref must be greater than 0. Please enter a positive value.';
+            banner.style.display = 'block';
+            return false;
+        }
+        banner.style.display = 'none';
+        return true;
     },
 
     getSignalConfig() {

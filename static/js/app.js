@@ -31,6 +31,7 @@ const App = {
     },
 
     async runSimulation() {
+        if (!UI.validateVref()) return;
         try {
             const converterType = UI.getConverterType();
             const params = UI.getParams();
@@ -61,6 +62,7 @@ const App = {
     },
 
     async stepSimulation() {
+        if (!UI.validateVref()) return;
         try {
             const converterType = UI.getConverterType();
             const params = UI.getParams();
