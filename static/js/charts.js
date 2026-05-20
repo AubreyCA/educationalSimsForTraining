@@ -204,7 +204,7 @@ const Charts = {
         let xMax = options.xMax !== undefined ? options.xMax : Math.max(...xData);
         const yMin = options.yMin !== undefined ? options.yMin : Math.min(...data.y);
         const yMax = options.yMax !== undefined ? options.yMax : Math.max(...data.y);
-        const yPad = (yMax - yMin) * 0.1 || 0.1;
+        const yPad = options.noPad ? 0 : ((yMax - yMin) * 0.1 || 0.1);
 
         // Apply zoom
         const canvasId = canvas.id;

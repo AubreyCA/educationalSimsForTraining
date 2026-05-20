@@ -185,6 +185,11 @@ const App = {
         const outputCanvas = document.getElementById('graph-output');
         const reconCanvas = document.getElementById('graph-reconstructed');
 
+        // Reset graph headers for ADC context
+        document.querySelector('#graphs-container .graph-panel:nth-child(1) h4').textContent = 'Input Signal';
+        document.querySelector('#graphs-container .graph-panel:nth-child(2) h4').textContent = 'Digital Codeword Output';
+        document.querySelector('#graphs-container .graph-panel:nth-child(3) h4').textContent = 'Reconstructed Output';
+
         // Input graph
         if (UI.fftMode.input && data.input_fft) {
             Charts.plotFFT(inputCanvas, data.input_fft.frequencies, data.input_fft.magnitudes, {
@@ -247,6 +252,15 @@ const App = {
         const outputCanvas = document.getElementById('graph-output');
         const reconCanvas = document.getElementById('graph-reconstructed');
 
+        const numBits = data.results[0]?.num_bits || 8;
+        const vref = data.results[0]?.vref || 1.0;
+        const maxCode = Math.pow(2, numBits) - 1;
+
+        // Update graph headers for DAC context
+        document.querySelector('#graphs-container .graph-panel:nth-child(1) h4').textContent = 'Input Codes';
+        document.querySelector('#graphs-container .graph-panel:nth-child(2) h4').textContent = 'Analog Output';
+        document.querySelector('#graphs-container .graph-panel:nth-child(3) h4').textContent = 'Transfer Characteristic';
+
         // Input codes
         Charts.plotTimeDomain(inputCanvas, {
             y: data.input_codes
@@ -256,7 +270,8 @@ const App = {
             color: Charts.colors.input,
             staircase: true,
             yMin: 0,
-            yMax: Math.pow(2, data.results[0]?.num_bits || 8) - 1
+            yMax: maxCode,
+            noPad: true
         });
 
         // Analog output
@@ -269,7 +284,8 @@ const App = {
             color: Charts.colors.output,
             staircase: true,
             yMin: 0,
-            yMax: 1.0
+            yMax: vref,
+            noPad: true
         });
 
         // Transfer characteristic
@@ -281,9 +297,12 @@ const App = {
                 overlay: tc.ideal_voltages
             }, {
                 xLabel: 'Input Code',
-                yLabel: 'Output Voltage',
+                yLabel: 'Output Voltage (V)',
                 color: Charts.colors.output,
-                overlayColor: Charts.colors.input
+                overlayColor: Charts.colors.input,
+                yMin: 0,
+                yMax: vref,
+                noPad: true
             });
         }
     },
