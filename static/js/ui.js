@@ -332,7 +332,8 @@ const UI = {
     },
 
     getVref() {
-        return parseFloat(document.getElementById('param-vref').value) || 1.0;
+        const v = parseFloat(document.getElementById('param-vref').value);
+        return (v && v > 0) ? v : 1.0;
     },
 
     getSignalConfig() {
