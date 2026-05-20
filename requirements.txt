@@ -1,0 +1,6 @@
+numpy
+scipy
+flask
+pytest
+playwright
+pytest-playwright

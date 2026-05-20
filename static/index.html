@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADC/DAC Educational Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <h1>ADC/DAC Educational Simulator</h1>
+            <div id="header-controls">
+                <button id="btn-comparative" title="Comparative Mode">Compare</button>
+                <button id="btn-export-csv" title="Export CSV">CSV</button>
+                <button id="btn-export-png" title="Export PNG">PNG</button>
+                <button id="btn-theme" title="Toggle Dark Mode">🌙</button>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div id="main-layout">
+            <!-- Sidebar -->
+            <aside id="sidebar">
+                <!-- Converter Selection -->
+                <section class="sidebar-section">
+                    <h3>Converter</h3>
+                    <select id="converter-select">
+                        <optgroup label="ADCs">
+                            <option value="flash_adc">Flash ADC</option>
+                            <option value="sar_adc" selected>SAR ADC</option>
+                            <option value="sigma_delta_adc">Sigma-Delta ADC</option>
+                            <option value="pipeline_adc">Pipeline ADC</option>
+                        </optgroup>
+                        <optgroup label="DACs">
+                            <option value="r2r_dac">R-2R Ladder DAC</option>
+                            <option value="current_dac">Current-Steering DAC</option>
+                        </optgroup>
+                    </select>
+                </section>
+
+                <!-- Parameters -->
+                <section class="sidebar-section" id="params-section">
+                    <h3>Parameters</h3>
+                    <div class="param-group">
+                        <label for="param-bits">Number of Bits (N)</label>
+                        <input type="range" id="param-bits" min="1" max="16" value="4">
+                        <span class="param-value" id="param-bits-value">4</span>
+                    </div>
+                    <div class="param-group">
+                        <label for="param-vref">Reference Voltage (Vref)</label>
+                        <input type="number" id="param-vref" value="0" min="0" max="20" step="0.1">
+                        <span class="param-hint">Mid-code = Vref/2</span>
+                    </div>
+                    <div class="param-group" id="param-sample-rate-group">
+                        <label for="param-sample-rate">Sample Rate (fs) Hz</label>
+                        <input type="range" id="param-sample-rate" min="100" max="100000" value="1000" step="100">
+                        <input type="number" id="param-sample-rate-num" value="1000" min="100" max="100000" step="100">
+                    </div>
+                    <div class="param-group" id="param-num-samples-group">
+                        <label for="param-num-samples">Number of Samples</label>
+                        <input type="range" id="param-num-samples" min="8" max="1024" value="64" step="8">
+                        <span class="param-value" id="param-num-samples-value">64</span>
+                    </div>
+                    <div class="param-group" id="param-osr-group" style="display:none;">
+                        <label for="param-osr">Oversampling Ratio (OSR)</label>
+                        <select id="param-osr">
+                            <option value="16">16</option>
+                            <option value="32">32</option>
+                            <option value="64" selected>64</option>
+                            <option value="128">128</option>
+                            <option value="256">256</option>
+                        </select>
+                    </div>
+                    <div class="param-group" id="param-stages-group" style="display:none;">
+                        <label for="param-stages">Pipeline Stages</label>
+                        <input type="range" id="param-stages" min="2" max="6" value="3">
+                        <span class="param-value" id="param-stages-value">3</span>
+                    </div>
+                    <div class="param-group" id="param-bits-per-stage-group" style="display:none;">
+                        <label for="param-bits-per-stage">Bits per Stage</label>
+                        <input type="range" id="param-bits-per-stage" min="1" max="3" value="2">
+                        <span class="param-value" id="param-bits-per-stage-value">2</span>
+                    </div>
+                    <div class="param-group" id="param-dac-mode-group" style="display:none;">
+                        <label for="param-dac-mode">DAC Mode</label>
+                        <select id="param-dac-mode">
+                            <option value="binary">Binary-weighted</option>
+                            <option value="thermometer">Thermometer-coded</option>
+                        </select>
+                    </div>
+
+                    <!-- Computed values -->
+                    <div class="computed-values" id="computed-values">
+                        <div>LSB: <span id="computed-lsb">0.0625 V</span></div>
+                        <div>Mid-code (Vref/2): <span id="computed-midcode">0x800</span></div>
+                        <div>Nyquist: <span id="computed-nyquist">500 Hz</span></div>
+                        <div>Samples/period: <span id="computed-spp">10</span></div>
+                    </div>
+                </section>
+
+                <!-- Input Signal -->
+                <section class="sidebar-section" id="signal-section">
+                    <h3>Input Signal</h3>
+                    <div class="param-group">
+                        <label for="signal-type">Waveform</label>
+                        <select id="signal-type">
+                            <option value="sine">Sine Wave</option>
+                            <option value="sawtooth">Sawtooth</option>
+                            <option value="pulse">Pulse/Square</option>
+                            <option value="dc">DC</option>
+                        </select>
+                    </div>
+                    <div class="param-group">
+                        <label for="signal-amplitude">Amplitude (V)</label>
+                        <input type="range" id="signal-amplitude" min="0" max="1" step="0.01" value="0.8">
+                        <input type="number" id="signal-amplitude-num" value="0.8" min="0" max="1" step="0.01">
+                    </div>
+                    <div class="param-group" id="signal-frequency-group">
+                        <label for="signal-frequency">Frequency (Hz)</label>
+                        <input type="range" id="signal-frequency" min="1" max="10000" value="100" step="1">
+                        <input type="number" id="signal-frequency-num" value="100" min="1" max="10000">
+                    </div>
+                    <div class="param-group" id="signal-duty-group" style="display:none;">
+                        <label for="signal-duty">Duty Cycle (%)</label>
+                        <input type="range" id="signal-duty" min="1" max="99" value="50">
+                        <span class="param-value" id="signal-duty-value">50%</span>
+                    </div>
+
+                    <!-- DAC Input (hidden for ADC) -->
+                    <div id="dac-input-section" style="display:none;">
+                        <div class="param-group">
+                            <label for="dac-clock-freq">Clock Frequency (Hz)</label>
+                            <input type="number" id="dac-clock-freq" value="10000" min="100" max="1000000" step="100">
+                        </div>
+                        <div class="param-group">
+                            <label for="dac-input-mode">Input Mode</label>
+                            <select id="dac-input-mode">
+                                <option value="frequency">Desired Output (freq + amp)</option>
+                                <option value="codewords">Manual Codewords</option>
+                                <option value="ramp">Ramp (all codes)</option>
+                                <option value="step">Step</option>
+                            </select>
+                        </div>
+                        <div class="param-group" id="dac-freq-group">
+                            <label for="dac-out-freq">Output Frequency (Hz)</label>
+                            <input type="number" id="dac-out-freq" value="100" min="1" max="100000" step="1">
+                        </div>
+                        <div class="param-group" id="dac-amp-group">
+                            <label for="dac-out-amp">Output Amplitude (V)</label>
+                            <input type="number" id="dac-out-amp" value="0.8" min="0" max="20" step="0.01">
+                        </div>
+                        <div class="param-group" id="dac-codes-group" style="display:none;">
+                            <label for="dac-manual-codes">Codewords (comma-separated)</label>
+                            <input type="text" id="dac-manual-codes" placeholder="0, 64, 128, 255">
+                        </div>
+                        <div class="param-group" id="dac-num-cycles-group">
+                            <label for="dac-num-cycles">Number of Cycles</label>
+                            <input type="number" id="dac-num-cycles" value="2" min="1" max="100" step="1">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Interpolation -->
+                <section class="sidebar-section" id="interpolation-section">
+                    <h3>Interpolation</h3>
+                    <select id="interpolation-method">
+                        <option value="zoh">Zero-Order Hold</option>
+                        <option value="linear">Linear</option>
+                        <option value="sinc">Sinc (Ideal)</option>
+                    </select>
+                </section>
+
+                <!-- Playback Controls -->
+                <section class="sidebar-section">
+                    <h3>Playback</h3>
+                    <div class="playback-buttons">
+                        <button id="btn-reset" title="Reset" disabled>⟲</button>
+                        <button id="btn-step" title="Step" disabled>▶|</button>
+                        <button id="btn-play" title="Play" disabled>▶</button>
+                        <button id="btn-pause" title="Pause" disabled>⏸</button>
+                    </div>
+                    <div class="param-group">
+                        <label for="playback-speed">Speed (ms/step)</label>
+                        <input type="range" id="playback-speed" min="100" max="2000" value="500" step="100" disabled>
+                        <span class="param-value" id="playback-speed-value">500ms</span>
+                    </div>
+                </section>
+
+                <!-- Run Simulation Button -->
+                <section class="sidebar-section">
+                    <button id="btn-simulate" class="btn-primary">Run Simulation</button>
+                </section>
+            </aside>
+
+            <!-- Main Content -->
+            <main id="main-content">
+                <!-- Aliasing Warning -->
+                <div id="aliasing-warning" class="warning-banner" style="display:none;"></div>
+
+                <!-- Graphs Row -->
+                <div id="graphs-container">
+                    <div class="graph-panel">
+                        <div class="graph-header">
+                            <h4>Input Signal</h4>
+                            <div class="graph-controls">
+                                <button class="zoom-btn zoom-in" data-graph="graph-input" title="Zoom In">+</button>
+                                <button class="zoom-btn zoom-out" data-graph="graph-input" title="Zoom Out">−</button>
+                                <button class="zoom-btn zoom-reset" data-graph="graph-input" title="Reset Zoom">⟲</button>
+                                <button class="toggle-fft" data-graph="input">Time ⇄ FFT</button>
+                            </div>
+                        </div>
+                        <canvas id="graph-input" width="400" height="200"></canvas>
+                    </div>
+                    <div class="graph-panel">
+                        <div class="graph-header">
+                            <h4>Digital Codeword Output</h4>
+                            <div class="graph-controls">
+                                <button class="zoom-btn zoom-in" data-graph="graph-output" title="Zoom In">+</button>
+                                <button class="zoom-btn zoom-out" data-graph="graph-output" title="Zoom Out">−</button>
+                                <button class="zoom-btn zoom-reset" data-graph="graph-output" title="Reset Zoom">⟲</button>
+                                <button class="toggle-fft" data-graph="output">Time ⇄ FFT</button>
+                            </div>
+                        </div>
+                        <canvas id="graph-output" width="400" height="200"></canvas>
+                    </div>
+                    <div class="graph-panel">
+                        <div class="graph-header">
+                            <h4>Reconstructed Output</h4>
+                            <div class="graph-controls">
+                                <button class="zoom-btn zoom-in" data-graph="graph-reconstructed" title="Zoom In">+</button>
+                                <button class="zoom-btn zoom-out" data-graph="graph-reconstructed" title="Zoom Out">−</button>
+                                <button class="zoom-btn zoom-reset" data-graph="graph-reconstructed" title="Reset Zoom">⟲</button>
+                            </div>
+                        </div>
+                        <canvas id="graph-reconstructed" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Circuit and Analogy Panel -->
+                <div id="visualization-row">
+                    <div id="circuit-panel">
+                        <div class="graph-header">
+                            <h4>Circuit Diagram</h4>
+                            <div class="graph-controls">
+                                <button class="zoom-btn zoom-in" data-graph="circuit-canvas" title="Zoom In">+</button>
+                                <button class="zoom-btn zoom-out" data-graph="circuit-canvas" title="Zoom Out">−</button>
+                                <button class="zoom-btn zoom-reset" data-graph="circuit-canvas" title="Reset Zoom">⟲</button>
+                            </div>
+                        </div>
+                        <canvas id="circuit-canvas" width="600" height="350"></canvas>
+                    </div>
+                    <div id="analogy-panel">
+                        <div class="graph-header">
+                            <h4 id="analogy-title">Analogy</h4>
+                            <div class="graph-controls">
+                                <button class="zoom-btn zoom-in" data-graph="analogy-canvas" title="Zoom In">+</button>
+                                <button class="zoom-btn zoom-out" data-graph="analogy-canvas" title="Zoom Out">−</button>
+                                <button class="zoom-btn zoom-reset" data-graph="analogy-canvas" title="Reset Zoom">⟲</button>
+                            </div>
+                        </div>
+                        <canvas id="analogy-canvas" width="400" height="350"></canvas>
+                    </div>
+                </div>
+
+                <!-- Codeword Output Table -->
+                <div id="codeword-panel">
+                    <div class="codeword-header">
+                        <h4>Codeword Output</h4>
+                        <span id="codeword-count" class="param-hint"></span>
+                        <button id="btn-clear-codes" title="Clear Table">✕ Clear</button>
+                        <button id="btn-copy-codes" title="Copy All">📋 Copy</button>
+                    </div>
+                    <div id="codeword-table-container">
+                        <table id="codeword-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Time</th>
+                                    <th>Vin</th>
+                                    <th>Code (bin)</th>
+                                    <th>Code (dec)</th>
+                                    <th>Vout</th>
+                                    <th>Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="codeword-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Explanation Panel -->
+                <div id="explanation-panel">
+                    <div class="explanation-tabs">
+                        <button class="tab-btn active" data-tab="step">Step-by-Step</button>
+                        <button class="tab-btn" data-tab="theory">Theory</button>
+                        <button class="tab-btn" data-tab="log">Log</button>
+                    </div>
+                    <div class="tab-content active" id="tab-step">
+                        <pre id="explanation-text">Select a converter and run a simulation or step through manually.</pre>
+                    </div>
+                    <div class="tab-content" id="tab-theory">
+                        <div id="theory-content"></div>
+                    </div>
+                    <div class="tab-content" id="tab-log">
+                        <pre id="log-content">No log entries. Run a simulation first.</pre>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div id="metrics-panel" style="display:none;">
+                    <h4>Performance Metrics</h4>
+                    <div class="metrics-grid">
+                        <div class="metric"><span class="metric-label">ENOB:</span> <span id="metric-enob">-</span></div>
+                        <div class="metric"><span class="metric-label">SNR:</span> <span id="metric-snr">-</span></div>
+                        <div class="metric"><span class="metric-label">SFDR:</span> <span id="metric-sfdr">-</span></div>
+                        <div class="metric"><span class="metric-label">Max INL:</span> <span id="metric-inl">-</span></div>
+                        <div class="metric"><span class="metric-label">Max DNL:</span> <span id="metric-dnl">-</span></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/visualizers/flash.js"></script>
+    <script src="js/visualizers/sar.js"></script>
+    <script src="js/visualizers/sigma_delta.js"></script>
+    <script src="js/visualizers/pipeline.js"></script>
+    <script src="js/visualizers/r2r.js"></script>
+    <script src="js/visualizers/current_dac.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
