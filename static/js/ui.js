@@ -253,6 +253,7 @@ const UI = {
 
         // Signal section
         document.getElementById('signal-section').style.display = '';
+        document.getElementById('adc-signal-controls').style.display = isDAC ? 'none' : '';
         document.getElementById('dac-input-section').style.display = isDAC ? '' : 'none';
         document.getElementById('signal-frequency-group').style.display =
             (isDAC || document.getElementById('signal-type').value === 'dc') ? 'none' : '';

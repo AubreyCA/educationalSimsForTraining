@@ -103,29 +103,31 @@
                 <!-- Input Signal -->
                 <section class="sidebar-section" id="signal-section">
                     <h3>Input Signal</h3>
-                    <div class="param-group">
-                        <label for="signal-type">Waveform</label>
-                        <select id="signal-type">
-                            <option value="sine">Sine Wave</option>
-                            <option value="sawtooth">Sawtooth</option>
-                            <option value="pulse">Pulse/Square</option>
-                            <option value="dc">DC</option>
-                        </select>
-                    </div>
-                    <div class="param-group">
-                        <label for="signal-amplitude">Amplitude (V)</label>
-                        <input type="range" id="signal-amplitude" min="0" max="1" step="0.01" value="0.8">
-                        <input type="number" id="signal-amplitude-num" value="0.8" min="0" max="1" step="0.01">
-                    </div>
-                    <div class="param-group" id="signal-frequency-group">
-                        <label for="signal-frequency">Frequency (Hz)</label>
-                        <input type="range" id="signal-frequency" min="1" max="10000" value="100" step="1">
-                        <input type="number" id="signal-frequency-num" value="100" min="1" max="10000">
-                    </div>
-                    <div class="param-group" id="signal-duty-group" style="display:none;">
-                        <label for="signal-duty">Duty Cycle (%)</label>
-                        <input type="range" id="signal-duty" min="1" max="99" value="50">
-                        <span class="param-value" id="signal-duty-value">50%</span>
+                    <div id="adc-signal-controls">
+                        <div class="param-group">
+                            <label for="signal-type">Waveform</label>
+                            <select id="signal-type">
+                                <option value="sine">Sine Wave</option>
+                                <option value="sawtooth">Sawtooth</option>
+                                <option value="pulse">Pulse/Square</option>
+                                <option value="dc">DC</option>
+                            </select>
+                        </div>
+                        <div class="param-group">
+                            <label for="signal-amplitude">Amplitude (V)</label>
+                            <input type="range" id="signal-amplitude" min="0" max="1" step="0.01" value="0.8">
+                            <input type="number" id="signal-amplitude-num" value="0.8" min="0" max="1" step="0.01">
+                        </div>
+                        <div class="param-group" id="signal-frequency-group">
+                            <label for="signal-frequency">Frequency (Hz)</label>
+                            <input type="range" id="signal-frequency" min="1" max="10000" value="100" step="1">
+                            <input type="number" id="signal-frequency-num" value="100" min="1" max="10000">
+                        </div>
+                        <div class="param-group" id="signal-duty-group" style="display:none;">
+                            <label for="signal-duty">Duty Cycle (%)</label>
+                            <input type="range" id="signal-duty" min="1" max="99" value="50">
+                            <span class="param-value" id="signal-duty-value">50%</span>
+                        </div>
                     </div>
 
                     <!-- DAC Input (hidden for ADC) -->
