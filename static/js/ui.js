@@ -103,11 +103,16 @@ const UI = {
         const freqNum = document.getElementById('signal-frequency-num');
         freqSlider.addEventListener('input', () => {
             freqNum.value = freqSlider.value;
+            this.validateFrequency();
             this.updateComputedValues();
         });
         freqNum.addEventListener('change', () => {
             freqSlider.value = freqNum.value;
+            this.validateFrequency();
             this.updateComputedValues();
+        });
+        freqNum.addEventListener('input', () => {
+            this.validateFrequency();
         });
 
         // Duty cycle
@@ -468,6 +473,24 @@ const UI = {
         const banner = document.getElementById('error-banner');
         if (!v || v <= 0) {
             banner.textContent = '⚠️ Vref must be greater than 0. Please enter a positive value.';
+            banner.style.display = 'block';
+            return false;
+        }
+        banner.style.display = 'none';
+        return true;
+    },
+
+    validateFrequency() {
+        const type = this.getConverterType();
+        const isDAC = type === 'r2r_dac' || type === 'current_dac';
+        const signalType = document.getElementById('signal-type').value;
+        if (isDAC || signalType === 'dc') return true;
+
+        const el = document.getElementById('signal-frequency-num');
+        const f = parseFloat(el.value);
+        const banner = document.getElementById('error-banner');
+        if (isNaN(f) || f < 0) {
+            banner.textContent = '⚠️ Frequency must be 0 or greater. Please enter a non-negative value.';
             banner.style.display = 'block';
             return false;
         }

@@ -32,6 +32,7 @@ const App = {
 
     async runSimulation() {
         if (!UI.validateVref()) return;
+        if (!UI.validateFrequency()) return;
         try {
             const converterType = UI.getConverterType();
             const params = UI.getParams();
@@ -64,6 +65,7 @@ const App = {
 
     async stepSimulation() {
         if (!UI.validateVref()) return;
+        if (!UI.validateFrequency()) return;
         try {
             const converterType = UI.getConverterType();
             const params = UI.getParams();
@@ -97,12 +99,30 @@ const App = {
                 }
                 inputValue = Math.max(0, Math.min(numLevels - 1, inputValue));
             } else {
-                // ADCs expect a voltage; generate time-varying sine
+                // ADCs expect a voltage; generate based on signal type
+                const signalType = document.getElementById('signal-type').value;
                 const amplitude = parseFloat(document.getElementById('signal-amplitude-num').value);
                 const frequency = parseFloat(document.getElementById('signal-frequency-num').value) || 100;
                 const sampleRate = parseFloat(document.getElementById('param-sample-rate-num').value) || 1000;
                 const t = this.stepIndex / sampleRate;
-                inputValue = amplitude * Math.sin(2 * Math.PI * frequency * t);
+                const offset = vref / 2;
+
+                if (signalType === 'dc') {
+                    inputValue = amplitude;
+                } else if (signalType === 'sawtooth') {
+                    const period = 1.0 / frequency;
+                    inputValue = offset + (amplitude / 2) * (2 * ((t % period) / period) - 1);
+                } else if (signalType === 'pulse') {
+                    const period = 1.0 / frequency;
+                    const duty = (parseInt(document.getElementById('signal-duty').value) || 50) / 100.0;
+                    const phase = (t % period) / period;
+                    inputValue = phase < duty ? offset + amplitude / 2 : offset - amplitude / 2;
+                } else {
+                    // sine (default)
+                    inputValue = offset + (amplitude / 2) * Math.sin(2 * Math.PI * frequency * t);
+                }
+                // Clamp to [0, vref]
+                inputValue = Math.max(0, Math.min(vref - 1e-10, inputValue));
             }
 
             // For SAR, step through bits
