@@ -344,7 +344,16 @@ const App = {
         if (data) {
             this.drawCircuit(type, data);
             this.drawAnalogy(type, data);
+            if (type === 'sar_adc') this.drawSARInternals();
         }
+    },
+
+    drawSARInternals() {
+        const canvas = document.getElementById('sar-internals-canvas');
+        if (!canvas || canvas.style.display === 'none') return;
+        const ctx = canvas.getContext('2d');
+        const data = this.lastVizData || this.currentData;
+        SARVisualizer.drawInternals(ctx, canvas, data);
     },
 
     drawCircuit(type, data) {

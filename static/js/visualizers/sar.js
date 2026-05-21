@@ -278,5 +278,167 @@ const SARVisualizer = {
             }
         }
         return (low + high) / 2;
+    },
+
+    drawInternals(ctx, canvas, data) {
+        const w = canvas.width, h = canvas.height;
+        ctx.fillStyle = getCanvasBg();
+        ctx.fillRect(0, 0, w, h);
+
+        const state = data?.history ? data.history[data.history.length - 1] : data;
+        const numBits = state?.num_bits || 4;
+        const bitTrials = state?.bit_trials || [];
+        const currentBit = bitTrials.length - 1;
+
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('SAR Logic Internals — Register & Shift Register', 10, 20);
+
+        const boxW = Math.min(50, (w - 120) / numBits);
+        const startX = 60;
+
+        // --- Ring Counter (Shift Register) ---
+        const ringY = 55;
+        ctx.fillStyle = '#888';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('Ring Counter (bit selector):', 10, ringY - 5);
+
+        for (let i = 0; i < numBits; i++) {
+            const x = startX + i * (boxW + 4);
+            const active = (i === currentBit + 1) || (bitTrials.length === 0 && i === 0);
+            const done = i <= currentBit;
+
+            // Box
+            ctx.fillStyle = active ? '#ffaa00' : done ? '#1a3a5c' : '#111';
+            ctx.fillRect(x, ringY, boxW, 28);
+            ctx.strokeStyle = active ? '#ffaa00' : done ? '#00d4ff' : '#444';
+            ctx.lineWidth = active ? 2 : 1;
+            ctx.strokeRect(x, ringY, boxW, 28);
+
+            // Bit position label
+            ctx.fillStyle = active ? '#000' : '#aaa';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`B${numBits - 1 - i}`, x + boxW / 2, ringY + 12);
+
+            // Value in shift register
+            ctx.fillStyle = active ? '#000' : '#ffaa00';
+            ctx.font = '11px monospace';
+            ctx.fillText(active ? '1' : '0', x + boxW / 2, ringY + 24);
+            ctx.textAlign = 'left';
+        }
+
+        // Shift arrow
+        ctx.strokeStyle = '#ffaa00';
+        ctx.lineWidth = 1;
+        const arrowY = ringY + 32;
+        ctx.beginPath();
+        ctx.moveTo(startX, arrowY);
+        ctx.lineTo(startX + numBits * (boxW + 4) - 4, arrowY);
+        ctx.stroke();
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath();
+        ctx.moveTo(startX + numBits * (boxW + 4) - 4, arrowY - 4);
+        ctx.lineTo(startX + numBits * (boxW + 4) + 4, arrowY);
+        ctx.lineTo(startX + numBits * (boxW + 4) - 4, arrowY + 4);
+        ctx.fill();
+        ctx.fillStyle = '#ffaa00';
+        ctx.font = '9px sans-serif';
+        ctx.fillText('shift →', startX + numBits * (boxW + 4) + 8, arrowY + 3);
+
+        // --- SAR Register (N flip-flops) ---
+        const regY = 115;
+        ctx.fillStyle = '#888';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('SAR Register (N flip-flops):', 10, regY - 5);
+
+        for (let i = 0; i < numBits; i++) {
+            const x = startX + i * (boxW + 4);
+            const trial = bitTrials[i];
+            const decided = i <= currentBit;
+            const isCurrent = i === currentBit + 1;
+
+            // Flip-flop box
+            ctx.fillStyle = decided ? (trial?.decision === 1 ? '#003322' : '#220000') : '#111';
+            ctx.fillRect(x, regY, boxW, 36);
+            ctx.strokeStyle = decided ? (trial?.decision === 1 ? '#00ff88' : '#ff4444') : isCurrent ? '#ffaa00' : '#444';
+            ctx.lineWidth = isCurrent ? 2 : 1;
+            ctx.strokeRect(x, regY, boxW, 36);
+
+            // Bit label
+            ctx.fillStyle = '#aaa';
+            ctx.font = '8px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`MSB-${i}`, x + boxW / 2, regY + 10);
+
+            // Bit value
+            if (decided) {
+                ctx.fillStyle = trial.decision === 1 ? '#00ff88' : '#ff4444';
+                ctx.font = '16px monospace';
+                ctx.fillText(trial.decision.toString(), x + boxW / 2, regY + 28);
+            } else if (isCurrent) {
+                ctx.fillStyle = '#ffaa00';
+                ctx.font = '14px monospace';
+                ctx.fillText('?', x + boxW / 2, regY + 28);
+            } else {
+                ctx.fillStyle = '#444';
+                ctx.font = '14px monospace';
+                ctx.fillText('-', x + boxW / 2, regY + 28);
+            }
+            ctx.textAlign = 'left';
+        }
+
+        // --- Logic gate per bit ---
+        const gateY = 170;
+        ctx.fillStyle = '#888';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('Decision logic per bit:', 10, gateY - 5);
+
+        ctx.fillStyle = '#666';
+        ctx.font = '9px monospace';
+        ctx.fillText('bit[i] = (my_turn AND comp_out) OR (NOT my_turn AND prev_value)', 10, gateY + 10);
+
+        // --- Comparator output ---
+        const compY = gateY + 30;
+        if (bitTrials.length > 0) {
+            const lastTrial = bitTrials[bitTrials.length - 1];
+            ctx.fillStyle = '#888';
+            ctx.font = '10px sans-serif';
+            ctx.fillText('Comparator output:', 10, compY);
+            ctx.fillStyle = lastTrial.decision === 1 ? '#00ff88' : '#ff4444';
+            ctx.font = '12px monospace';
+            ctx.fillText(lastTrial.decision === 1 ? '1 (Vin ≥ DAC)' : '0 (Vin < DAC)', 140, compY);
+        }
+
+        // --- DAC register value ---
+        const dacY = compY + 25;
+        ctx.fillStyle = '#888';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('DAC Input (from register):', 10, dacY);
+        if (bitTrials.length > 0) {
+            const lastTrial = bitTrials[bitTrials.length - 1];
+            ctx.fillStyle = '#ff8800';
+            ctx.font = '12px monospace';
+            ctx.fillText(`${lastTrial.binary_so_far}  →  ${lastTrial.dac_voltage_after.toFixed(4)}V`, 170, dacY);
+        } else {
+            ctx.fillStyle = '#444';
+            ctx.font = '12px monospace';
+            ctx.fillText('${"0".repeat(numBits)}  →  0.0000V', 170, dacY);
+        }
+
+        // --- Clock cycle counter ---
+        const clockY = dacY + 25;
+        ctx.fillStyle = '#888';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('Clock cycle:', 10, clockY);
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = '12px monospace';
+        ctx.fillText(`${bitTrials.length} / ${numBits}`, 100, clockY);
+
+        if (bitTrials.length >= numBits) {
+            ctx.fillStyle = '#00ff88';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('✓ Conversion complete', 180, clockY);
+        }
     }
 };

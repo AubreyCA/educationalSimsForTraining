@@ -249,12 +249,14 @@
                         <div class="graph-header">
                             <h4>Circuit Diagram</h4>
                             <div class="graph-controls">
+                                <button id="btn-sar-internals" class="zoom-btn" title="Show SAR Register Internals" style="display:none; font-size:9px; width:auto; padding:2px 6px;">Internals</button>
                                 <button class="zoom-btn zoom-in" data-graph="circuit-canvas" title="Zoom In">+</button>
                                 <button class="zoom-btn zoom-out" data-graph="circuit-canvas" title="Zoom Out">−</button>
                                 <button class="zoom-btn zoom-reset" data-graph="circuit-canvas" title="Reset Zoom">⟲</button>
                             </div>
                         </div>
                         <canvas id="circuit-canvas" width="600" height="350"></canvas>
+                        <canvas id="sar-internals-canvas" width="600" height="300" style="display:none; margin-top:4px;"></canvas>
                     </div>
                     <div id="analogy-panel">
                         <div class="graph-header">

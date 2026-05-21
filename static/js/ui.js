@@ -12,6 +12,7 @@ const UI = {
         this.bindExport();
         this.bindZoom();
         this.bindThemeToggle();
+        this.bindSARInternals();
         this.updateVisibility();
         this.updateComputedValues();
         this.drawPlaceholders();
@@ -197,6 +198,22 @@ const UI = {
         });
     },
 
+    bindSARInternals() {
+        const btn = document.getElementById('btn-sar-internals');
+        const canvas = document.getElementById('sar-internals-canvas');
+        let visible = false;
+
+        btn.addEventListener('click', () => {
+            visible = !visible;
+            canvas.style.display = visible ? 'block' : 'none';
+            btn.style.background = visible ? '#00d4ff' : '';
+            btn.style.color = visible ? '#000' : '';
+            if (visible) {
+                App.drawSARInternals();
+            }
+        });
+    },
+
     bindZoom() {
         const vizCanvases = ['circuit-canvas', 'analogy-canvas'];
 
@@ -370,6 +387,16 @@ const UI = {
         else if (isSigmaDelta) analogyTitle.textContent = 'RNN Analogy';
         else if (isPipeline) analogyTitle.textContent = 'Pipeline Stages';
         else analogyTitle.textContent = 'Visualization';
+
+        // SAR internals button
+        const sarBtn = document.getElementById('btn-sar-internals');
+        const sarCanvas = document.getElementById('sar-internals-canvas');
+        if (type === 'sar_adc') {
+            sarBtn.style.display = '';
+        } else {
+            sarBtn.style.display = 'none';
+            if (sarCanvas) sarCanvas.style.display = 'none';
+        }
     },
 
     updateComputedValues() {
