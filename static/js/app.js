@@ -33,6 +33,7 @@ const App = {
     async runSimulation() {
         if (!UI.validateVref()) return;
         if (!UI.validateFrequency()) return;
+        if (!UI.validateAmplitude()) return;
         try {
             const converterType = UI.getConverterType();
             const params = UI.getParams();
@@ -66,6 +67,7 @@ const App = {
     async stepSimulation() {
         if (!UI.validateVref()) return;
         if (!UI.validateFrequency()) return;
+        if (!UI.validateAmplitude()) return;
         try {
             const converterType = UI.getConverterType();
             const params = UI.getParams();
@@ -105,21 +107,21 @@ const App = {
                 const frequency = parseFloat(document.getElementById('signal-frequency-num').value) || 100;
                 const sampleRate = parseFloat(document.getElementById('param-sample-rate-num').value) || 1000;
                 const t = this.stepIndex / sampleRate;
-                const offset = vref / 2;
+                const half = amplitude / 2;
 
                 if (signalType === 'dc') {
                     inputValue = amplitude;
                 } else if (signalType === 'sawtooth') {
                     const period = 1.0 / frequency;
-                    inputValue = offset + (amplitude / 2) * (2 * ((t % period) / period) - 1);
+                    inputValue = half + half * (2 * ((t % period) / period) - 1);
                 } else if (signalType === 'pulse') {
                     const period = 1.0 / frequency;
                     const duty = (parseInt(document.getElementById('signal-duty').value) || 50) / 100.0;
                     const phase = (t % period) / period;
-                    inputValue = phase < duty ? offset + amplitude / 2 : offset - amplitude / 2;
+                    inputValue = phase < duty ? amplitude : 0;
                 } else {
                     // sine (default)
-                    inputValue = offset + (amplitude / 2) * Math.sin(2 * Math.PI * frequency * t);
+                    inputValue = half + half * Math.sin(2 * Math.PI * frequency * t);
                 }
                 // Clamp to [0, vref]
                 inputValue = Math.max(0, Math.min(vref - 1e-10, inputValue));

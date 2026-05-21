@@ -14,22 +14,22 @@ sessions = {}
 
 
 def generate_signal(signal_type, amplitude, frequency, sample_rate, num_samples, duty_cycle=50, vref=1.0):
-    """Generate an input signal array."""
+    """Generate an input signal array. Signal ranges from 0 to amplitude."""
     t = np.arange(num_samples) / sample_rate
-    offset = vref / 2  # Center signal around Vref/2
+    half = amplitude / 2  # Signal swings from 0 to amplitude
 
     if signal_type == 'dc':
         signal = np.full(num_samples, amplitude)
     elif signal_type == 'sine':
-        signal = offset + amplitude / 2 * np.sin(2 * np.pi * frequency * t)
+        signal = half + half * np.sin(2 * np.pi * frequency * t)
     elif signal_type == 'sawtooth':
         period = 1.0 / frequency if frequency > 0 else 1.0
-        signal = offset + amplitude / 2 * (2 * (t % period) / period - 1)
+        signal = half + half * (2 * (t % period) / period - 1)
     elif signal_type == 'pulse':
         period = 1.0 / frequency if frequency > 0 else 1.0
         duty = duty_cycle / 100.0
         phase = (t % period) / period
-        signal = np.where(phase < duty, offset + amplitude / 2, offset - amplitude / 2)
+        signal = np.where(phase < duty, amplitude, 0.0)
     else:
         signal = np.full(num_samples, amplitude)
 

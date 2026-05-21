@@ -95,8 +95,9 @@ const UI = {
         // Amplitude sync
         const ampSlider = document.getElementById('signal-amplitude');
         const ampNum = document.getElementById('signal-amplitude-num');
-        ampSlider.addEventListener('input', () => { ampNum.value = ampSlider.value; });
-        ampNum.addEventListener('change', () => { ampSlider.value = ampNum.value; });
+        ampSlider.addEventListener('input', () => { ampNum.value = ampSlider.value; this.validateAmplitude(); });
+        ampNum.addEventListener('change', () => { ampSlider.value = ampNum.value; this.validateAmplitude(); });
+        ampNum.addEventListener('input', () => { this.validateAmplitude(); });
 
         // Frequency sync
         const freqSlider = document.getElementById('signal-frequency');
@@ -491,6 +492,23 @@ const UI = {
         const banner = document.getElementById('error-banner');
         if (isNaN(f) || f < 0) {
             banner.textContent = '⚠️ Frequency must be 0 or greater. Please enter a non-negative value.';
+            banner.style.display = 'block';
+            return false;
+        }
+        banner.style.display = 'none';
+        return true;
+    },
+
+    validateAmplitude() {
+        const type = this.getConverterType();
+        const isDAC = type === 'r2r_dac' || type === 'current_dac';
+        if (isDAC) return true;
+
+        const el = document.getElementById('signal-amplitude-num');
+        const a = parseFloat(el.value);
+        const banner = document.getElementById('error-banner');
+        if (isNaN(a) || a < 0) {
+            banner.textContent = '⚠️ Amplitude must be 0 or greater. Minimum voltage is 0V.';
             banner.style.display = 'block';
             return false;
         }
