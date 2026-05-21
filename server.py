@@ -178,7 +178,7 @@ def simulate():
                     # Map average to code
                     avg = r['average']
                     code = int(round(avg * (2 ** 8 - 1)))  # Approximate 8-bit equivalent
-                    digital_codes.append(max(0, code))
+                    digital_codes.append(max(0, min(255, code)))
                 sim_results = results
             else:
                 sim_results = converter.simulate(input_signal)
@@ -368,8 +368,9 @@ def _generate_dac_input(signal_config, num_bits):
 
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     print("=" * 50)
     print("  ADC/DAC Educational Simulator")
-    print("  http://localhost:8000")
+    print(f"  http://localhost:{port}")
     print("=" * 50)
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False)

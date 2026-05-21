@@ -233,6 +233,74 @@ const UI = {
                 }
             });
         });
+
+        // Drag-to-pan for all graph canvases
+        this.bindDragPan();
+    },
+
+    bindDragPan() {
+        const vizCanvases = ['circuit-canvas', 'analogy-canvas'];
+        const graphCanvases = ['graph-input', 'graph-output', 'graph-reconstructed'];
+        const allCanvasIds = [...graphCanvases, ...vizCanvases];
+
+        allCanvasIds.forEach(canvasId => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            let dragging = false;
+            let startX = 0;
+            let startY = 0;
+            let startPanX = 0;
+            let startPanY = 0;
+
+            canvas.style.cursor = 'grab';
+
+            canvas.addEventListener('mousedown', (e) => {
+                dragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+
+                if (vizCanvases.includes(canvasId)) {
+                    const z = App.getVizZoom(canvasId);
+                    startPanX = z.panX;
+                    startPanY = z.panY;
+                } else {
+                    const z = Charts.getZoom(canvasId);
+                    startPanX = z.panX;
+                }
+
+                e.preventDefault();
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                if (vizCanvases.includes(canvasId)) {
+                    const z = App.getVizZoom(canvasId);
+                    z.panX = startPanX + dx;
+                    z.panY = startPanY + dy;
+                    App.redrawViz();
+                } else {
+                    const z = Charts.getZoom(canvasId);
+                    if (z.level <= 1.0) return;
+                    // Convert pixel drag to panX delta (0-1 range)
+                    const plotWidth = canvas.width - 60; // approximate padding
+                    const panDelta = dx / plotWidth / z.level;
+                    z.panX = Math.max(0, Math.min(1, startPanX - panDelta));
+                    App.updateGraphs();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (dragging) {
+                    dragging = false;
+                    canvas.style.cursor = 'grab';
+                }
+            });
+        });
     },
 
     drawPlaceholders() {

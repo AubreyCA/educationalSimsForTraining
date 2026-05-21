@@ -32,10 +32,10 @@ class SigmaDeltaADC:
         # Comparator (1-bit quantizer)
         if self.integrator >= 0:
             bit_output = 1
-            self.feedback = self.vref / 2  # +Vref/2
+            self.feedback = self.vref  # High reference
         else:
             bit_output = 0
-            self.feedback = -self.vref / 2  # -Vref/2
+            self.feedback = 0.0  # Low reference
 
         self.bitstream.append(bit_output)
         self.step_index += 1
@@ -72,8 +72,8 @@ class SigmaDeltaADC:
         for i in range(num_complete_groups):
             group = bitstream[i * self.osr:(i + 1) * self.osr]
             avg = sum(group) / len(group)
-            # Map from [0, 1] to [−Vref/2, +Vref/2] range
-            analog_value = (avg - 0.5) * self.vref
+            # Map from [0, 1] to [0, Vref] range
+            analog_value = avg * self.vref
             results.append({
                 'group_index': i,
                 'ones_count': sum(group),
@@ -147,7 +147,7 @@ class SigmaDeltaADC:
         lines.append(f"   h_t = h_{{t-1}} + error = {s['integrator_prev']:.4f} + {s['error_signal']:.4f} = {s['integrator_current']:.4f}")
         lines.append(f"4. Comparator: integrator ({s['integrator_current']:.4f}) {'≥' if s['comparator_output'] == 1 else '<'} 0")
         lines.append(f"   → output bit = {s['comparator_output']}")
-        lines.append(f"5. 1-bit DAC feedback: {'+'  if s['comparator_output'] == 1 else '-'}Vref/2 = {s['feedback_value']:.4f} V")
+        lines.append(f"5. 1-bit DAC feedback: {'Vref' if s['comparator_output'] == 1 else '0'} = {s['feedback_value']:.4f} V")
         lines.append("")
         recent = s['bitstream'][-min(20, len(s['bitstream'])):]
         lines.append(f"Bitstream (last {len(recent)}): {''.join(map(str, recent))}")
@@ -157,7 +157,7 @@ class SigmaDeltaADC:
             ones = sum(s['bitstream'][-s['osr']:])
             avg = ones / s['osr']
             lines.append(f"\nDecimation (last {s['osr']} bits): {ones} ones / {s['osr']} = {avg:.4f}")
-            lines.append(f"Reconstructed value: ({avg:.4f} - 0.5) × {s['vref']} = {(avg - 0.5) * s['vref']:.4f} V")
+            lines.append(f"Reconstructed value: {avg:.4f} × {s['vref']} = {avg * s['vref']:.4f} V")
 
         lines.append("\n[RNN analogy: h_t = h_(t-1) + (x_t - y_(t-1)·Vref), y_t = sign(h_t)]")
         return "\n".join(lines)

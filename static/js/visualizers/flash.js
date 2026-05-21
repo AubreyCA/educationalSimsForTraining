@@ -7,8 +7,19 @@ const FlashVisualizer = {
 
         const numBits = data?.num_bits || data?.history?.[0]?.num_bits || 3;
         const numComparators = Math.pow(2, numBits) - 1;
-        const maxDraw = Math.min(numComparators, 15); // Limit drawing
+        const maxDraw = Math.min(numComparators, 15); // Limit visual elements
         const vref = data?.vref || 1.0;
+
+        // Determine which comparators to draw (evenly distributed)
+        let drawIndices = [];
+        if (numComparators <= maxDraw) {
+            drawIndices = Array.from({length: numComparators}, (_, i) => i);
+        } else {
+            // Evenly sample comparators across the full range
+            for (let d = 0; d < maxDraw; d++) {
+                drawIndices.push(Math.round(d * (numComparators - 1) / (maxDraw - 1)));
+            }
+        }
 
         // Draw resistor ladder on left
         ctx.strokeStyle = '#666';
@@ -32,9 +43,10 @@ const FlashVisualizer = {
         const compX = 180;
         const state = data?.history ? data.history[data.history.length - 1] : data;
 
-        for (let i = 0; i < maxDraw; i++) {
-            const y = ladderBot - (i + 1) * spacing;
-            const threshold = ((i + 1) / (numComparators + 1)) * vref;
+        for (let d = 0; d < maxDraw; d++) {
+            const i = drawIndices[d]; // actual comparator index (0-based)
+            const y = ladderBot - (d + 1) * spacing;
+            const threshold = ((i + 1) / numComparators) * vref;
 
             // Resistor tick
             ctx.strokeStyle = '#555';
@@ -76,6 +88,17 @@ const FlashVisualizer = {
             ctx.stroke();
             ctx.fillStyle = compActive === 1 ? '#00ff88' : '#666';
             ctx.fillText(compActive !== undefined ? compActive.toString() : '?', compX + 65, y + 4);
+        }
+
+        // Show total comparator count if truncated
+        if (numComparators > maxDraw) {
+            ctx.fillStyle = '#ffaa00';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(`(${numComparators} comparators total, showing ${maxDraw})`, ladderX - 10, ladderBot + 20);
+        } else {
+            ctx.fillStyle = '#888';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(`${numComparators} comparators`, ladderX - 10, ladderBot + 20);
         }
 
         // Input line (Vin)

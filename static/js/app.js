@@ -356,11 +356,10 @@ const App = {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (z.scale !== 1.0) {
-            // Scale from center of canvas
+        if (z.scale !== 1.0 || z.panX !== 0 || z.panY !== 0) {
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-            ctx.translate(cx, cy);
+            ctx.translate(cx + z.panX, cy + z.panY);
             ctx.scale(z.scale, z.scale);
             ctx.translate(-cx, -cy);
         }
@@ -393,11 +392,10 @@ const App = {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (z.scale !== 1.0) {
-            // Scale from center of canvas
+        if (z.scale !== 1.0 || z.panX !== 0 || z.panY !== 0) {
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-            ctx.translate(cx, cy);
+            ctx.translate(cx + z.panX, cy + z.panY);
             ctx.scale(z.scale, z.scale);
             ctx.translate(-cx, -cy);
         }

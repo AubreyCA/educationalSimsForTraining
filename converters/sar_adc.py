@@ -75,6 +75,7 @@ class SARADC:
             'quantized_voltage': quantized_voltage,
             'quantization_error': quantization_error,
             'num_bits': self.num_bits,
+            'num_comparators': 1,
             'vref': self.vref,
             'lsb': self.lsb,
             'total_cycles': self.num_bits,
@@ -159,6 +160,7 @@ class SARADC:
         lines.append(f"=== SAR ADC Conversion (Sample #{s['step_index']}) ===")
         lines.append(f"Input voltage: {s['input_voltage']:.4f} V")
         lines.append(f"Resolution: {s['num_bits']} bits, Vref: {s['vref']} V, LSB: {s['lsb']:.4f} V")
+        lines.append(f"Number of comparators: 1 (same regardless of resolution)")
         lines.append(f"This is a BINARY SEARCH on voltage levels ({s['total_cycles']} steps for {s['num_bits']} bits)")
         lines.append("")
         for trial in s['bit_trials']:
