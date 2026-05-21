@@ -54,6 +54,7 @@ const App = {
             this.lastVizData = data;
             this.drawCircuit(converterType, data);
             this.drawAnalogy(converterType, data);
+            if (converterType === 'sar_adc') this.drawSARInternals();
 
         } catch (err) {
             console.error('Simulation error:', err);
@@ -126,6 +127,7 @@ const App = {
             this.lastVizData = data.state;
             this.drawCircuit(converterType, data.state);
             this.drawAnalogy(converterType, data.state);
+            this.drawSARInternals();
 
         } catch (err) {
             console.error('Step error:', err);
